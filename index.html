@@ -32,28 +32,24 @@
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
 
+    <!-- Chat UI giữ nguyên như cũ -->
     <div class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-        <!-- Header -->
         <div class="bg-black p-6 text-white flex justify-between items-center">
             <div>
                 <h1 class="text-xl font-bold">Momas AI</h1>
                 <p class="text-xs text-gray-400">Powered by Gemini 2.5 Flash</p>
             </div>
-            
             <div class="flex items-center gap-3">
                 <div id="wallet-status" class="hidden items-center gap-2 bg-zinc-800 px-3 py-1.5 rounded-2xl">
                     <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                     <span id="wallet-address" class="text-sm font-mono"></span>
                 </div>
-                
-                <button id="connect-btn" onclick="connectWallet()"
-                    class="bg-white text-black px-5 py-2 rounded-2xl font-medium hover:bg-zinc-200 transition-colors">
+                <button id="connect-btn" onclick="connectWallet()" class="bg-white text-black px-5 py-2 rounded-2xl font-medium hover:bg-zinc-200 transition-colors">
                     Connect Wallet
                 </button>
             </div>
         </div>
 
-        <!-- Chat Area -->
         <div id="chat-history" class="h-[450px] overflow-y-auto p-6 space-y-4 bg-gray-50/50">
             <div class="flex justify-start">
                 <div class="bg-white border border-gray-200 text-gray-800 p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[85%]">
@@ -62,16 +58,12 @@
             </div>
         </div>
 
-        <!-- Input Area -->
         <div class="p-6 bg-white border-t border-gray-100">
             <div class="relative flex items-center">
-                <input type="text" id="user-input" 
-                    onkeypress="if(event.key === 'Enter') askGemini()"
-                    class="w-full pb-3 pt-3 pl-4 pr-16 bg-gray-100 border-none rounded-2xl focus:ring-2 focus:ring-black outline-none transition-all" 
-                    placeholder="Ask anything...">
-                
-                <button onclick="askGemini()" id="send-btn" 
-                    class="absolute right-2 bg-black text-white p-2 rounded-xl hover:scale-105 active:scale-95 transition-all">
+                <input type="text" id="user-input" onkeypress="if(event.key === 'Enter') askGemini()" 
+                       class="w-full pb-3 pt-3 pl-4 pr-16 bg-gray-100 border-none rounded-2xl focus:ring-2 focus:ring-black outline-none transition-all" 
+                       placeholder="Ask anything...">
+                <button onclick="askGemini()" id="send-btn" class="absolute right-2 bg-black text-white p-2 rounded-xl hover:scale-105 active:scale-95 transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
                     </svg>
@@ -80,75 +72,32 @@
         </div>
     </div>
 
-    <!-- Wallet Connect Modal -->
+    <!-- Connect Modal -->
     <div id="connect-modal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50">
         <div class="bg-white rounded-3xl w-full max-w-[380px] overflow-hidden shadow-xl">
             <div class="p-6">
-                <div class="flex items-center justify-between mb-6">
+                <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-semibold">Connect a Wallet</h2>
-                    <button onclick="closeConnectModal()" class="text-gray-400 hover:text-black text-3xl leading-none">×</button>
+                    <button onclick="closeConnectModal()" class="text-3xl text-gray-400 hover:text-black">×</button>
                 </div>
-
                 <div class="space-y-2">
-                    <button onclick="connectMetaMask()" class="wallet-option">
-                        <div class="w-11 h-11 bg-[#F6851B] rounded-2xl flex items-center justify-center text-white text-2xl">🦊</div>
-                        <div>
-                            <div class="font-medium">MetaMask</div>
-                            <div class="text-xs text-gray-500">Browser extension & mobile app</div>
-                        </div>
+                    <button onclick="connectWith('metamask')" class="wallet-option">
+                        <div class="w-11 h-11 bg-[#F6851B] rounded-2xl flex items-center justify-center text-white text-3xl">🦊</div>
+                        <div><div class="font-medium">MetaMask</div><div class="text-xs text-gray-500">Browser & mobile</div></div>
                     </button>
-
-                    <button onclick="connectOKX()" class="wallet-option">
-                        <div class="w-11 h-11 bg-black rounded-2xl flex items-center justify-center">
-                            <span class="text-white font-bold text-xl">OKX</span>
-                        </div>
-                        <div>
-                            <div class="font-medium">OKX Wallet</div>
-                            <div class="text-xs text-gray-500">Popular in Asia</div>
-                        </div>
+                    <button onclick="connectWith('okx')" class="wallet-option">
+                        <div class="w-11 h-11 bg-black rounded-2xl flex items-center justify-center text-white font-bold text-2xl">OKX</div>
+                        <div><div class="font-medium">OKX Wallet</div><div class="text-xs text-gray-500">Popular in Asia</div></div>
                     </button>
-
-                    <button onclick="connectBinance()" class="wallet-option">
-                        <div class="w-11 h-11 bg-yellow-500 rounded-2xl flex items-center justify-center text-2xl">BNB</div>
-                        <div>
-                            <div class="font-medium">Binance Wallet</div>
-                            <div class="text-xs text-gray-500">Official Binance wallet</div>
-                        </div>
+                    <button onclick="connectWith('binance')" class="wallet-option">
+                        <div class="w-11 h-11 bg-yellow-500 rounded-2xl flex items-center justify-center text-3xl">BNB</div>
+                        <div><div class="font-medium">Binance Wallet</div><div class="text-xs text-gray-500">Official Binance</div></div>
                     </button>
-
-                    <button onclick="connectWalletConnect()" class="wallet-option">
-                        <div class="w-11 h-11 bg-blue-600 rounded-2xl flex items-center justify-center">
-                            <span class="text-white text-xl">🔗</span>
-                        </div>
-                        <div>
-                            <div class="font-medium">WalletConnect</div>
-                            <div class="text-xs text-gray-500">Scan with mobile wallet</div>
-                        </div>
+                    <button onclick="connectWith('walletconnect')" class="wallet-option">
+                        <div class="w-11 h-11 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-3xl">🔗</div>
+                        <div><div class="font-medium">WalletConnect</div><div class="text-xs text-gray-500">Scan with mobile</div></div>
                     </button>
                 </div>
-
-                <div class="mt-8 text-center">
-                    <p class="text-xs text-gray-500">New to Ethereum wallets?</p>
-                    <a href="https://metamask.io" target="_blank" class="text-blue-600 text-xs hover:underline">Learn more →</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Install MetaMask Modal -->
-    <div id="install-modal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50">
-        <div class="bg-white rounded-3xl w-full max-w-[340px] p-8 text-center">
-            <div class="mx-auto w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center text-4xl mb-4">🦊</div>
-            <h3 class="text-xl font-semibold mb-2">MetaMask is not installed</h3>
-            <p class="text-gray-600 mb-6">Please install MetaMask browser extension or mobile app to continue.</p>
-            
-            <div class="grid grid-cols-2 gap-3">
-                <a href="https://metamask.io/download/" target="_blank" class="bg-black text-white py-3 rounded-2xl font-medium hover:bg-zinc-800">
-                    Download MetaMask
-                </a>
-                <button onclick="closeInstallModal()" class="bg-gray-100 py-3 rounded-2xl font-medium">
-                    Cancel
-                </button>
             </div>
         </div>
     </div>
@@ -159,13 +108,6 @@
         const WALLET_CONNECT_PROJECT_ID = "62f3d5e881a6c16cdcdde5f4a1d41389";
 
         let userAddress = null;
-        let walletProvider = null;
-
-        const wcModal = new window.WalletConnectModal({
-            projectId: WALLET_CONNECT_PROJECT_ID,
-            themeMode: "light",
-            chains: [1]
-        });
 
         function connectWallet() {
             document.getElementById('connect-modal').classList.remove('hidden');
@@ -175,18 +117,36 @@
             document.getElementById('connect-modal').classList.add('hidden');
         }
 
-        function closeInstallModal() {
-            document.getElementById('install-modal').classList.add('hidden');
+        async function connectWith(walletType) {
+            closeConnectModal();
+
+            if (walletType === 'metamask') {
+                if (!window.ethereum) {
+                    window.open('https://metamask.io/download/', '_blank');
+                    return;
+                }
+                await connectMetaMask();
+            }
+            else if (walletType === 'okx') {
+                if (!window.okxwallet) {
+                    window.open('https://www.okx.com/web3', '_blank');
+                    return;
+                }
+                await connectOKX();
+            }
+            else if (walletType === 'binance') {
+                if (!window.BinanceChain) {
+                    window.open('https://www.binance.com/en/wallet', '_blank');
+                    return;
+                }
+                await connectBinance();
+            }
+            else if (walletType === 'walletconnect') {
+                await connectWalletConnect();
+            }
         }
 
         async function connectMetaMask() {
-            closeConnectModal();
-
-            if (!window.ethereum) {
-                document.getElementById('install-modal').classList.remove('hidden');
-                return;
-            }
-
             const btn = document.getElementById('connect-btn');
             const status = document.getElementById('wallet-status');
             const addressEl = document.getElementById('wallet-address');
@@ -199,49 +159,37 @@
                 const accounts = await provider.send("eth_requestAccounts", []);
                 
                 userAddress = accounts[0];
-                walletProvider = provider;
+                const short = userAddress.substring(0,6) + "..." + userAddress.substring(userAddress.length-4);
+                addressEl.textContent = short;
 
-                const shortAddress = userAddress.substring(0, 6) + "..." + userAddress.substring(userAddress.length - 4);
-                addressEl.textContent = shortAddress;
-                
                 status.classList.remove('hidden');
                 status.classList.add('flex');
-                
+
                 btn.textContent = "Disconnect";
                 btn.onclick = disconnectWallet;
-                
+
                 document.getElementById('user-input').disabled = false;
                 document.getElementById('send-btn').disabled = false;
-
-            } catch (error) {
-                console.error(error);
-                alert("Connection failed: " + error.message);
-                btn.disabled = false;
+            } catch (err) {
+                alert("MetaMask connect failed: " + err.message);
                 btn.textContent = "Connect Wallet";
+                btn.disabled = false;
             }
         }
 
-        async function connectWalletConnect() {
-            closeConnectModal();
-
+        async function connectOKX() {
             const btn = document.getElementById('connect-btn');
-
             try {
                 btn.disabled = true;
-                btn.textContent = "Opening QR...";
+                btn.textContent = "Connecting...";
 
-                const { uri, approval } = await wcModal.open();
-
-                const session = await approval();
-                const provider = new ethers.BrowserProvider(session.provider);
+                const provider = new ethers.BrowserProvider(window.okxwallet);
                 const accounts = await provider.send("eth_requestAccounts", []);
                 
                 userAddress = accounts[0];
-                walletProvider = provider;
+                const short = userAddress.substring(0,6) + "..." + userAddress.substring(userAddress.length-4);
+                document.getElementById('wallet-address').textContent = short;
 
-                const shortAddress = userAddress.substring(0, 6) + "..." + userAddress.substring(userAddress.length - 4);
-                
-                document.getElementById('wallet-address').textContent = shortAddress;
                 document.getElementById('wallet-status').classList.remove('hidden');
                 document.getElementById('wallet-status').classList.add('flex');
 
@@ -250,19 +198,80 @@
 
                 document.getElementById('user-input').disabled = false;
                 document.getElementById('send-btn').disabled = false;
-
-            } catch (error) {
-                console.error(error);
-                alert("WalletConnect failed: " + (error.message || "User rejected"));
-                btn.disabled = false;
+            } catch (err) {
+                alert("OKX connect failed: " + err.message);
                 btn.textContent = "Connect Wallet";
+                btn.disabled = false;
+            }
+        }
+
+        async function connectBinance() {
+            const btn = document.getElementById('connect-btn');
+            try {
+                btn.disabled = true;
+                btn.textContent = "Connecting...";
+
+                const provider = new ethers.BrowserProvider(window.BinanceChain);
+                const accounts = await provider.send("eth_requestAccounts", []);
+                
+                userAddress = accounts[0];
+                const short = userAddress.substring(0,6) + "..." + userAddress.substring(userAddress.length-4);
+                document.getElementById('wallet-address').textContent = short;
+
+                document.getElementById('wallet-status').classList.remove('hidden');
+                document.getElementById('wallet-status').classList.add('flex');
+
+                btn.textContent = "Disconnect";
+                btn.onclick = disconnectWallet;
+
+                document.getElementById('user-input').disabled = false;
+                document.getElementById('send-btn').disabled = false;
+            } catch (err) {
+                alert("Binance Wallet connect failed: " + err.message);
+                btn.textContent = "Connect Wallet";
+                btn.disabled = false;
+            }
+        }
+
+        async function connectWalletConnect() {
+            const btn = document.getElementById('connect-btn');
+            btn.disabled = true;
+            btn.textContent = "Opening QR...";
+
+            try {
+                const wcModal = new window.WalletConnectModal({
+                    projectId: WALLET_CONNECT_PROJECT_ID,
+                    themeMode: "light",
+                    chains: [1]
+                });
+
+                const { uri, approval } = await wcModal.open();
+                const session = await approval();
+                const provider = new ethers.BrowserProvider(session.provider);
+                const accounts = await provider.send("eth_requestAccounts", []);
+                
+                userAddress = accounts[0];
+                const short = userAddress.substring(0,6) + "..." + userAddress.substring(userAddress.length-4);
+                document.getElementById('wallet-address').textContent = short;
+
+                document.getElementById('wallet-status').classList.remove('hidden');
+                document.getElementById('wallet-status').classList.add('flex');
+
+                btn.textContent = "Disconnect";
+                btn.onclick = disconnectWallet;
+
+                document.getElementById('user-input').disabled = false;
+                document.getElementById('send-btn').disabled = false;
+            } catch (err) {
+                console.error(err);
+                alert("WalletConnect failed: " + (err.message || "User rejected"));
+                btn.textContent = "Connect Wallet";
+                btn.disabled = false;
             }
         }
 
         function disconnectWallet() {
             userAddress = null;
-            walletProvider = null;
-            
             const status = document.getElementById('wallet-status');
             const btn = document.getElementById('connect-btn');
             
@@ -276,16 +285,7 @@
             document.getElementById('send-btn').disabled = true;
         }
 
-        function connectOKX() {
-            alert("OKX Wallet sẽ được hỗ trợ sau!");
-            closeConnectModal();
-        }
-
-        function connectBinance() {
-            alert("Binance Wallet sẽ được hỗ trợ sau!");
-            closeConnectModal();
-        }
-
+        // askGemini function (giữ nguyên như trước)
         window.askGemini = async function() {
             const inputField = document.getElementById('user-input');
             const history = document.getElementById('chat-history');
@@ -294,12 +294,7 @@
 
             if (!prompt) return;
 
-            history.innerHTML += `
-                <div class="flex justify-end">
-                    <div class="bg-black text-white p-4 rounded-2xl rounded-tr-none shadow-md max-w-[85%]">
-                        ${prompt}
-                    </div>
-                </div>`;
+            history.innerHTML += `<div class="flex justify-end"><div class="bg-black text-white p-4 rounded-2xl rounded-tr-none shadow-md max-w-[85%]">${prompt}</div></div>`;
             
             inputField.value = "";
             history.scrollTop = history.scrollHeight;
@@ -309,31 +304,16 @@
                 const response = await fetch(API_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }]
-                    })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
                 });
 
                 const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error ? data.error.message : "Model Not Available");
-                }
+                if (!response.ok) throw new Error(data.error ? data.error.message : "Model error");
 
                 const text = data.candidates[0].content.parts[0].text;
-
-                history.innerHTML += `
-                    <div class="flex justify-start">
-                        <div class="bg-white border border-gray-200 text-gray-800 p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[85%]">
-                            ${text.replace(/\n/g, '<br>')}
-                        </div>
-                    </div>`;
+                history.innerHTML += `<div class="flex justify-start"><div class="bg-white border border-gray-200 text-gray-800 p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[85%]">${text.replace(/\n/g, '<br>')}</div></div>`;
             } catch (error) {
-                console.error("Error:", error);
-                history.innerHTML += `
-                    <div class="text-red-500 text-center text-xs py-2">
-                        Lỗi: ${error.message}
-                    </div>`;
+                history.innerHTML += `<div class="text-red-500 text-center text-xs py-2">Lỗi: ${error.message}</div>`;
             } finally {
                 btn.disabled = false;
                 history.scrollTop = history.scrollHeight;
