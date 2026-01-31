@@ -6,6 +6,7 @@
     <title>Momas AI Chat Box</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+    <script src="https://unpkg.com/@walletconnect/modal@2.6.2/dist/index.iife.js"></script>
     <style>
         body { background-color: #fafafa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         ::-webkit-scrollbar { width: 6px; }
@@ -155,8 +156,16 @@
     <script>
         const API_KEY = "AIzaSyBne9FrQjLIZPOf78fjHwame5hi8Y7-Nyw";
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+        const WALLET_CONNECT_PROJECT_ID = "62f3d5e881a6c16cdcdde5f4a1d41389";
 
         let userAddress = null;
+        let walletProvider = null;
+
+        const wcModal = new window.WalletConnectModal({
+            projectId: WALLET_CONNECT_PROJECT_ID,
+            themeMode: "light",
+            chains: [1]
+        });
 
         function connectWallet() {
             document.getElementById('connect-modal').classList.remove('hidden');
@@ -190,7 +199,8 @@
                 const accounts = await provider.send("eth_requestAccounts", []);
                 
                 userAddress = accounts[0];
-                
+                walletProvider = provider;
+
                 const shortAddress = userAddress.substring(0, 6) + "..." + userAddress.substring(userAddress.length - 4);
                 addressEl.textContent = shortAddress;
                 
@@ -211,8 +221,47 @@
             }
         }
 
+        async function connectWalletConnect() {
+            closeConnectModal();
+
+            const btn = document.getElementById('connect-btn');
+
+            try {
+                btn.disabled = true;
+                btn.textContent = "Opening QR...";
+
+                const { uri, approval } = await wcModal.open();
+
+                const session = await approval();
+                const provider = new ethers.BrowserProvider(session.provider);
+                const accounts = await provider.send("eth_requestAccounts", []);
+                
+                userAddress = accounts[0];
+                walletProvider = provider;
+
+                const shortAddress = userAddress.substring(0, 6) + "..." + userAddress.substring(userAddress.length - 4);
+                
+                document.getElementById('wallet-address').textContent = shortAddress;
+                document.getElementById('wallet-status').classList.remove('hidden');
+                document.getElementById('wallet-status').classList.add('flex');
+
+                btn.textContent = "Disconnect";
+                btn.onclick = disconnectWallet;
+
+                document.getElementById('user-input').disabled = false;
+                document.getElementById('send-btn').disabled = false;
+
+            } catch (error) {
+                console.error(error);
+                alert("WalletConnect failed: " + (error.message || "User rejected"));
+                btn.disabled = false;
+                btn.textContent = "Connect Wallet";
+            }
+        }
+
         function disconnectWallet() {
             userAddress = null;
+            walletProvider = null;
             
             const status = document.getElementById('wallet-status');
             const btn = document.getElementById('connect-btn');
@@ -227,23 +276,69 @@
             document.getElementById('send-btn').disabled = true;
         }
 
-        // Các hàm placeholder cho các ví khác
         function connectOKX() {
-            alert("OKX Wallet integration coming soon!");
+            alert("OKX Wallet sẽ được hỗ trợ sau!");
             closeConnectModal();
         }
 
         function connectBinance() {
-            alert("Binance Wallet integration coming soon!");
+            alert("Binance Wallet sẽ được hỗ trợ sau!");
             closeConnectModal();
         }
 
-        function connectWalletConnect() {
-            alert("WalletConnect QR code coming soon!");
-            closeConnectModal();
-        }
+        window.askGemini = async function() {
+            const inputField = document.getElementById('user-input');
+            const history = document.getElementById('chat-history');
+            const btn = document.getElementById('send-btn');
+            const prompt = inputField.value.trim();
 
-        window.askGemini = async function() { ... } // giữ nguyên hàm askGemini của bạn
+            if (!prompt) return;
+
+            history.innerHTML += `
+                <div class="flex justify-end">
+                    <div class="bg-black text-white p-4 rounded-2xl rounded-tr-none shadow-md max-w-[85%]">
+                        ${prompt}
+                    </div>
+                </div>`;
+            
+            inputField.value = "";
+            history.scrollTop = history.scrollHeight;
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error ? data.error.message : "Model Not Available");
+                }
+
+                const text = data.candidates[0].content.parts[0].text;
+
+                history.innerHTML += `
+                    <div class="flex justify-start">
+                        <div class="bg-white border border-gray-200 text-gray-800 p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[85%]">
+                            ${text.replace(/\n/g, '<br>')}
+                        </div>
+                    </div>`;
+            } catch (error) {
+                console.error("Error:", error);
+                history.innerHTML += `
+                    <div class="text-red-500 text-center text-xs py-2">
+                        Lỗi: ${error.message}
+                    </div>`;
+            } finally {
+                btn.disabled = false;
+                history.scrollTop = history.scrollHeight;
+            }
+        };
 
         window.onload = function() {
             document.getElementById('user-input').disabled = true;
