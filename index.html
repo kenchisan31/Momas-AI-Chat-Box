@@ -16,28 +16,25 @@
 
     <div class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
 
-
         <div class="bg-black p-6 text-white flex justify-between items-center">
-    <div>
-        <h1 class="text-xl font-bold">Momas AI</h1>
-        <p class="text-xs text-gray-400">Powered by Gemini 2.5 Flash</p>
-    </div>
-    
-    <div class="flex items-center gap-3">
-        <div id="wallet-status" class="hidden items-center gap-2 bg-zinc-800 px-3 py-1.5 rounded-2xl">
-            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span id="wallet-address" class="text-sm font-mono"></span>
+            <div>
+                <h1 class="text-xl font-bold">Momas AI</h1>
+                <p class="text-xs text-gray-400">Powered by Gemini 2.5 Flash</p>
             </div>
-        
-             <button id="connect-btn" onclick="connectWallet()"
-                  class="bg-white text-black px-5 py-2 rounded-2xl font-medium hover:bg-zinc-200 transition-colors">
-                 Wallet connection
-            </button>
-         </div>
-    </div>
+            
+            <div class="flex items-center gap-3">
+                <div id="wallet-status" class="hidden items-center gap-2 bg-zinc-800 px-3 py-1.5 rounded-2xl">
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span id="wallet-address" class="text-sm font-mono"></span>
+                </div>
+                
+                <button id="connect-btn" onclick="connectWallet()"
+                    class="bg-white text-black px-5 py-2 rounded-2xl font-medium hover:bg-zinc-200 transition-colors">
+                    Wallet connection
+                </button>
+            </div>
+        </div>
 
-
-        
         <div id="chat-history" class="h-[450px] overflow-y-auto p-6 space-y-4 bg-gray-50/50">
             <div class="flex justify-start">
                 <div class="bg-white border border-gray-200 text-gray-800 p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[85%]">
@@ -63,144 +60,121 @@
         </div>
     </div>
 
-   <script>
-    // 1. Thay API Key của bạn vào đây
-    const API_KEY = "AIzaSyBne9FrQjLIZPOf78fjHwame5hi8Y7-Nyw"; 
-    
-    // 2. Sử dụng đúng endpoint v1 và tên model chuẩn
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
-    
-    
-    
-    
-    let userAddress = null;
+    <script>
+        let userAddress = null;
 
-async function connectWallet() {
-    const btn = document.getElementById('connect-btn');
-    const status = document.getElementById('wallet-status');
-    const addressEl = document.getElementById('wallet-address');
+        async function connectWallet() {
+            const btn = document.getElementById('connect-btn');
+            const status = document.getElementById('wallet-status');
+            const addressEl = document.getElementById('wallet-address');
 
-    if (!window.ethereum) {
-        alert("Please install MetaMask or another Web3 wallet to connect!");
-        return;
-    }
-
-    try {
-        btn.disabled = true;
-        btn.textContent = "Connecting...";
-
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const accounts = await provider.send("eth_requestAccounts", []);
-        
-        userAddress = accounts[0];
-        
-        // Hiển thị địa chỉ rút gọn
-        const shortAddress = userAddress.substring(0, 6) + "..." + userAddress.substring(userAddress.length - 4);
-        addressEl.textContent = shortAddress;
-        
-        status.classList.remove('hidden');
-        status.classList.add('flex');
-        
-        btn.textContent = "Disconnect";
-        btn.onclick = disconnectWallet;
-        
-        // Bật ô input chat
-        document.getElementById('user-input').disabled = false;
-        document.getElementById('send-btn').disabled = false;
-
-        console.log("Conneted:", userAddress);
-
-    } catch (error) {
-        console.error(error);
-        alert("Connect false: " + error.message);
-        btn.disabled = false;
-        btn.textContent = "Connect Wallet";
-    }
-}
-
-function disconnectWallet() {
-    userAddress = null;
-    
-    const status = document.getElementById('wallet-status');
-    const btn = document.getElementById('connect-btn');
-    
-    status.classList.add('hidden');
-    status.classList.remove('flex');
-    
-    btn.textContent = "Connect Wallet";
-    btn.onclick = connectWallet;
-    
-    // Tắt chat
-    document.getElementById('user-input').disabled = true;
-    document.getElementById('send-btn').disabled = true;
-    
-    // Xóa lịch sử chat hoặc giữ lại cũng được
-}
- 
-
-
-
-    window.askGemini = async function() {
-        const inputField = document.getElementById('user-input');
-        const history = document.getElementById('chat-history');
-        const btn = document.getElementById('send-btn');
-        const prompt = inputField.value.trim();
-
-        if (!prompt) return;
-
-        // Hiển thị tin nhắn người dùng
-        history.innerHTML += `
-            <div class="flex justify-end">
-                <div class="bg-black text-white p-4 rounded-2xl rounded-tr-none shadow-md max-w-[85%]">
-                    ${prompt}
-                </div>
-            </div>`;
-        
-        inputField.value = "";
-        history.scrollTop = history.scrollHeight;
-        btn.disabled = true;
-
-        try {
-            // Gọi API trực tiếp bằng fetch
-            const response = await fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }]
-                })
-            });
-
-            const data = await response.json();
-            
-            // Kiểm tra nếu có lỗi từ phía Google
-            if (!response.ok) {
-                throw new Error(data.error ? data.error.message : "Model Not Available");
+            if (!window.ethereum) {
+                alert("Please install MetaMask or another Web3 wallet to connect!");
+                return;
             }
 
-            const text = data.candidates[0].content.parts[0].text;
+            try {
+                btn.disabled = true;
+                btn.textContent = "Connecting...";
 
-            // Hiển thị phản hồi từ AI
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                const accounts = await provider.send("eth_requestAccounts", []);
+                
+                userAddress = accounts[0];
+                const shortAddress = userAddress.substring(0, 6) + "..." + userAddress.substring(userAddress.length - 4);
+                addressEl.textContent = shortAddress;
+                
+                status.classList.remove('hidden');
+                status.classList.add('flex');
+                
+                btn.textContent = "Disconnect";
+                btn.onclick = disconnectWallet;
+                
+                document.getElementById('user-input').disabled = false;
+                document.getElementById('send-btn').disabled = false;
+
+            } catch (error) {
+                console.error(error);
+                alert("Connect failed: " + error.message);
+                btn.disabled = false;
+                btn.textContent = "Wallet connection";
+            }
+        }
+
+        function disconnectWallet() {
+            userAddress = null;
+            const status = document.getElementById('wallet-status');
+            const btn = document.getElementById('connect-btn');
+            
+            status.classList.add('hidden');
+            status.classList.remove('flex');
+            
+            btn.textContent = "Wallet connection";
+            btn.onclick = connectWallet;
+            
+            document.getElementById('user-input').disabled = true;
+            document.getElementById('send-btn').disabled = true;
+        }
+
+        window.askGemini = async function() {
+            const inputField = document.getElementById('user-input');
+            const history = document.getElementById('chat-history');
+            const btn = document.getElementById('send-btn');
+            const prompt = inputField.value.trim();
+
+            if (!prompt) return;
+
+            // Hiển thị tin nhắn người dùng
             history.innerHTML += `
-                <div class="flex justify-start">
-                    <div class="bg-white border border-gray-200 text-gray-800 p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[85%]">
-                        ${text.replace(/\n/g, '<br>')}
+                <div class="flex justify-end">
+                    <div class="bg-black text-white p-4 rounded-2xl rounded-tr-none shadow-md max-w-[85%]">
+                        ${prompt}
                     </div>
                 </div>`;
-        } catch (error) {
-            console.error("Error:", error);
-            history.innerHTML += `
-                <div class="text-red-500 text-center text-xs py-2">
-                    Lỗi: ${error.message} <br>
-                </div>`;
-        } finally {
-            btn.disabled = false;
+            
+            inputField.value = "";
             history.scrollTop = history.scrollHeight;
-        }
-    }
-    window.onload = function() {
-    document.getElementById('user-input').disabled = true;
-    document.getElementById('send-btn').disabled = true;
-};
-</script>
+            btn.disabled = true;
+
+            try {
+                // Gọi qua proxy /api/chat trên Vercel (không lộ key)
+                const response = await fetch('/api/chat', {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ prompt })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "Server error");
+                }
+
+                const text = data.text;
+
+                // Hiển thị phản hồi từ AI
+                history.innerHTML += `
+                    <div class="flex justify-start">
+                        <div class="bg-white border border-gray-200 text-gray-800 p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[85%]">
+                            ${text.replace(/\n/g, '<br>')}
+                        </div>
+                    </div>`;
+            } catch (error) {
+                console.error("Error:", error);
+                history.innerHTML += `
+                    <div class="text-red-500 text-center text-xs py-2">
+                        Lỗi: ${error.message || "Không thể kết nối server"}
+                    </div>`;
+            } finally {
+                btn.disabled = false;
+                history.scrollTop = history.scrollHeight;
+            }
+        };
+
+        window.onload = function() {
+            document.getElementById('user-input').disabled = true;
+            document.getElementById('send-btn').disabled = true;
+        };
+    </script>
 </body>
 </html>
