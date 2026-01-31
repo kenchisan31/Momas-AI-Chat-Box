@@ -6,54 +6,38 @@
     <title>Momas AI Chat Box</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
-    <script src="https://unpkg.com/@walletconnect/modal@2.6.2/dist/index.iife.js"></script>
     <style>
         body { background-color: #fafafa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
-
-        .wallet-option {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            width: 100%;
-            padding: 16px;
-            border-radius: 16px;
-            border: 1px solid #eee;
-            transition: all 0.2s;
-            text-align: left;
-        }
-        .wallet-option:hover {
-            border-color: #000;
-            background: #fafafa;
-            transform: translateX(4px);
-        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
 
     <div class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-        <!-- Header -->
-        <div class="bg-black p-6 text-white flex justify-between items-center">
-            <div>
-                <h1 class="text-xl font-bold">Momas AI</h1>
-                <p class="text-xs text-gray-400">Powered by Gemini 2.5 Flash</p>
-            </div>
-            
-            <div class="flex items-center gap-3">
-                <div id="wallet-status" class="hidden items-center gap-2 bg-zinc-800 px-3 py-1.5 rounded-2xl">
-                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span id="wallet-address" class="text-sm font-mono"></span>
-                </div>
-                
-                <button id="connect-btn" onclick="connectWallet()"
-                    class="bg-white text-black px-5 py-2 rounded-2xl font-medium hover:bg-zinc-200 transition-colors">
-                    Connect Wallet
-                </button>
-            </div>
-        </div>
 
-        <!-- Chat Area -->
+
+        <div class="bg-black p-6 text-white flex justify-between items-center">
+    <div>
+        <h1 class="text-xl font-bold">Momas AI</h1>
+        <p class="text-xs text-gray-400">Powered by Gemini 2.5 Flash</p>
+    </div>
+    
+    <div class="flex items-center gap-3">
+        <div id="wallet-status" class="hidden items-center gap-2 bg-zinc-800 px-3 py-1.5 rounded-2xl">
+            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span id="wallet-address" class="text-sm font-mono"></span>
+            </div>
+        
+             <button id="connect-btn" onclick="connectWallet()"
+                  class="bg-white text-black px-5 py-2 rounded-2xl font-medium hover:bg-zinc-200 transition-colors">
+                 Wallet connection
+            </button>
+         </div>
+    </div>
+
+
+        
         <div id="chat-history" class="h-[450px] overflow-y-auto p-6 space-y-4 bg-gray-50/50">
             <div class="flex justify-start">
                 <div class="bg-white border border-gray-200 text-gray-800 p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[85%]">
@@ -62,7 +46,6 @@
             </div>
         </div>
 
-        <!-- Input Area -->
         <div class="p-6 bg-white border-t border-gray-100">
             <div class="relative flex items-center">
                 <input type="text" id="user-input" 
@@ -80,270 +63,144 @@
         </div>
     </div>
 
-    <!-- Wallet Connect Modal -->
-    <div id="connect-modal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50">
-        <div class="bg-white rounded-3xl w-full max-w-[380px] overflow-hidden shadow-xl">
-            <div class="p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-semibold">Connect a Wallet</h2>
-                    <button onclick="closeConnectModal()" class="text-gray-400 hover:text-black text-3xl leading-none">×</button>
+   <script>
+    // 1. Thay API Key của bạn vào đây
+    const API_KEY = "AIzaSyBne9FrQjLIZPOf78fjHwame5hi8Y7-Nyw"; 
+    
+    // 2. Sử dụng đúng endpoint v1 và tên model chuẩn
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+    
+    
+    
+    
+    let userAddress = null;
+
+async function connectWallet() {
+    const btn = document.getElementById('connect-btn');
+    const status = document.getElementById('wallet-status');
+    const addressEl = document.getElementById('wallet-address');
+
+    if (!window.ethereum) {
+        alert("Please install MetaMask or another Web3 wallet to connect!");
+        return;
+    }
+
+    try {
+        btn.disabled = true;
+        btn.textContent = "Connecting...";
+
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const accounts = await provider.send("eth_requestAccounts", []);
+        
+        userAddress = accounts[0];
+        
+        // Hiển thị địa chỉ rút gọn
+        const shortAddress = userAddress.substring(0, 6) + "..." + userAddress.substring(userAddress.length - 4);
+        addressEl.textContent = shortAddress;
+        
+        status.classList.remove('hidden');
+        status.classList.add('flex');
+        
+        btn.textContent = "Disconnect";
+        btn.onclick = disconnectWallet;
+        
+        // Bật ô input chat
+        document.getElementById('user-input').disabled = false;
+        document.getElementById('send-btn').disabled = false;
+
+        console.log("Conneted:", userAddress);
+
+    } catch (error) {
+        console.error(error);
+        alert("Connect false: " + error.message);
+        btn.disabled = false;
+        btn.textContent = "Connect Wallet";
+    }
+}
+
+function disconnectWallet() {
+    userAddress = null;
+    
+    const status = document.getElementById('wallet-status');
+    const btn = document.getElementById('connect-btn');
+    
+    status.classList.add('hidden');
+    status.classList.remove('flex');
+    
+    btn.textContent = "Connect Wallet";
+    btn.onclick = connectWallet;
+    
+    // Tắt chat
+    document.getElementById('user-input').disabled = true;
+    document.getElementById('send-btn').disabled = true;
+    
+    // Xóa lịch sử chat hoặc giữ lại cũng được
+}
+ 
+
+
+
+    window.askGemini = async function() {
+        const inputField = document.getElementById('user-input');
+        const history = document.getElementById('chat-history');
+        const btn = document.getElementById('send-btn');
+        const prompt = inputField.value.trim();
+
+        if (!prompt) return;
+
+        // Hiển thị tin nhắn người dùng
+        history.innerHTML += `
+            <div class="flex justify-end">
+                <div class="bg-black text-white p-4 rounded-2xl rounded-tr-none shadow-md max-w-[85%]">
+                    ${prompt}
                 </div>
+            </div>`;
+        
+        inputField.value = "";
+        history.scrollTop = history.scrollHeight;
+        btn.disabled = true;
 
-                <div class="space-y-2">
-                    <button onclick="connectMetaMask()" class="wallet-option">
-                        <div class="w-11 h-11 bg-[#F6851B] rounded-2xl flex items-center justify-center text-white text-2xl">🦊</div>
-                        <div>
-                            <div class="font-medium">MetaMask</div>
-                            <div class="text-xs text-gray-500">Browser extension & mobile app</div>
-                        </div>
-                    </button>
+        try {
+            // Gọi API trực tiếp bằng fetch
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
+            });
 
-                    <button onclick="connectOKX()" class="wallet-option">
-                        <div class="w-11 h-11 bg-black rounded-2xl flex items-center justify-center">
-                            <span class="text-white font-bold text-xl">OKX</span>
-                        </div>
-                        <div>
-                            <div class="font-medium">OKX Wallet</div>
-                            <div class="text-xs text-gray-500">Popular in Asia</div>
-                        </div>
-                    </button>
-
-                    <button onclick="connectBinance()" class="wallet-option">
-                        <div class="w-11 h-11 bg-yellow-500 rounded-2xl flex items-center justify-center text-2xl">BNB</div>
-                        <div>
-                            <div class="font-medium">Binance Wallet</div>
-                            <div class="text-xs text-gray-500">Official Binance wallet</div>
-                        </div>
-                    </button>
-
-                    <button onclick="connectWalletConnect()" class="wallet-option">
-                        <div class="w-11 h-11 bg-blue-600 rounded-2xl flex items-center justify-center">
-                            <span class="text-white text-xl">🔗</span>
-                        </div>
-                        <div>
-                            <div class="font-medium">WalletConnect</div>
-                            <div class="text-xs text-gray-500">Scan with mobile wallet</div>
-                        </div>
-                    </button>
-                </div>
-
-                <div class="mt-8 text-center">
-                    <p class="text-xs text-gray-500">New to Ethereum wallets?</p>
-                    <a href="https://metamask.io" target="_blank" class="text-blue-600 text-xs hover:underline">Learn more →</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Install MetaMask Modal -->
-    <div id="install-modal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50">
-        <div class="bg-white rounded-3xl w-full max-w-[340px] p-8 text-center">
-            <div class="mx-auto w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center text-4xl mb-4">🦊</div>
-            <h3 class="text-xl font-semibold mb-2">MetaMask is not installed</h3>
-            <p class="text-gray-600 mb-6">Please install MetaMask browser extension or mobile app to continue.</p>
+            const data = await response.json();
             
-            <div class="grid grid-cols-2 gap-3">
-                <a href="https://metamask.io/download/" target="_blank" class="bg-black text-white py-3 rounded-2xl font-medium hover:bg-zinc-800">
-                    Download MetaMask
-                </a>
-                <button onclick="closeInstallModal()" class="bg-gray-100 py-3 rounded-2xl font-medium">
-                    Cancel
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const API_KEY = "AIzaSyBne9FrQjLIZPOf78fjHwame5hi8Y7-Nyw";
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
-        const WALLET_CONNECT_PROJECT_ID = "62f3d5e881a6c16cdcdde5f4a1d41389";
-
-        let userAddress = null;
-        let walletProvider = null;
-
-        const wcModal = new window.WalletConnectModal({
-            projectId: WALLET_CONNECT_PROJECT_ID,
-            themeMode: "light",
-            chains: [1]
-        });
-
-        function connectWallet() {
-            document.getElementById('connect-modal').classList.remove('hidden');
-        }
-
-        function closeConnectModal() {
-            document.getElementById('connect-modal').classList.add('hidden');
-        }
-
-        function closeInstallModal() {
-            document.getElementById('install-modal').classList.add('hidden');
-        }
-
-        async function connectMetaMask() {
-            closeConnectModal();
-
-            if (!window.ethereum) {
-                document.getElementById('install-modal').classList.remove('hidden');
-                return;
+            // Kiểm tra nếu có lỗi từ phía Google
+            if (!response.ok) {
+                throw new Error(data.error ? data.error.message : "Model Not Available");
             }
 
-            const btn = document.getElementById('connect-btn');
-            const status = document.getElementById('wallet-status');
-            const addressEl = document.getElementById('wallet-address');
+            const text = data.candidates[0].content.parts[0].text;
 
-            try {
-                btn.disabled = true;
-                btn.textContent = "Connecting...";
-
-                const provider = new ethers.BrowserProvider(window.ethereum);
-                const accounts = await provider.send("eth_requestAccounts", []);
-                
-                userAddress = accounts[0];
-                walletProvider = provider;
-
-                const shortAddress = userAddress.substring(0, 6) + "..." + userAddress.substring(userAddress.length - 4);
-                addressEl.textContent = shortAddress;
-                
-                status.classList.remove('hidden');
-                status.classList.add('flex');
-                
-                btn.textContent = "Disconnect";
-                btn.onclick = disconnectWallet;
-                
-                document.getElementById('user-input').disabled = false;
-                document.getElementById('send-btn').disabled = false;
-
-            } catch (error) {
-                console.error(error);
-                alert("Connection failed: " + error.message);
-                btn.disabled = false;
-                btn.textContent = "Connect Wallet";
-            }
-        }
-
-        async function connectWalletConnect() {
-            closeConnectModal();
-
-            const btn = document.getElementById('connect-btn');
-
-            try {
-                btn.disabled = true;
-                btn.textContent = "Opening QR...";
-
-                const { uri, approval } = await wcModal.open();
-
-                const session = await approval();
-                const provider = new ethers.BrowserProvider(session.provider);
-                const accounts = await provider.send("eth_requestAccounts", []);
-                
-                userAddress = accounts[0];
-                walletProvider = provider;
-
-                const shortAddress = userAddress.substring(0, 6) + "..." + userAddress.substring(userAddress.length - 4);
-                
-                document.getElementById('wallet-address').textContent = shortAddress;
-                document.getElementById('wallet-status').classList.remove('hidden');
-                document.getElementById('wallet-status').classList.add('flex');
-
-                btn.textContent = "Disconnect";
-                btn.onclick = disconnectWallet;
-
-                document.getElementById('user-input').disabled = false;
-                document.getElementById('send-btn').disabled = false;
-
-            } catch (error) {
-                console.error(error);
-                alert("WalletConnect failed: " + (error.message || "User rejected"));
-                btn.disabled = false;
-                btn.textContent = "Connect Wallet";
-            }
-        }
-
-        function disconnectWallet() {
-            userAddress = null;
-            walletProvider = null;
-            
-            const status = document.getElementById('wallet-status');
-            const btn = document.getElementById('connect-btn');
-            
-            status.classList.add('hidden');
-            status.classList.remove('flex');
-            
-            btn.textContent = "Connect Wallet";
-            btn.onclick = connectWallet;
-            
-            document.getElementById('user-input').disabled = true;
-            document.getElementById('send-btn').disabled = true;
-        }
-
-        function connectOKX() {
-            alert("OKX Wallet sẽ được hỗ trợ sau!");
-            closeConnectModal();
-        }
-
-        function connectBinance() {
-            alert("Binance Wallet sẽ được hỗ trợ sau!");
-            closeConnectModal();
-        }
-
-        window.askGemini = async function() {
-            const inputField = document.getElementById('user-input');
-            const history = document.getElementById('chat-history');
-            const btn = document.getElementById('send-btn');
-            const prompt = inputField.value.trim();
-
-            if (!prompt) return;
-
+            // Hiển thị phản hồi từ AI
             history.innerHTML += `
-                <div class="flex justify-end">
-                    <div class="bg-black text-white p-4 rounded-2xl rounded-tr-none shadow-md max-w-[85%]">
-                        ${prompt}
+                <div class="flex justify-start">
+                    <div class="bg-white border border-gray-200 text-gray-800 p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[85%]">
+                        ${text.replace(/\n/g, '<br>')}
                     </div>
                 </div>`;
-            
-            inputField.value = "";
+        } catch (error) {
+            console.error("Error:", error);
+            history.innerHTML += `
+                <div class="text-red-500 text-center text-xs py-2">
+                    Lỗi: ${error.message} <br>
+                </div>`;
+        } finally {
+            btn.disabled = false;
             history.scrollTop = history.scrollHeight;
-            btn.disabled = true;
-
-            try {
-                const response = await fetch(API_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }]
-                    })
-                });
-
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error ? data.error.message : "Model Not Available");
-                }
-
-                const text = data.candidates[0].content.parts[0].text;
-
-                history.innerHTML += `
-                    <div class="flex justify-start">
-                        <div class="bg-white border border-gray-200 text-gray-800 p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[85%]">
-                            ${text.replace(/\n/g, '<br>')}
-                        </div>
-                    </div>`;
-            } catch (error) {
-                console.error("Error:", error);
-                history.innerHTML += `
-                    <div class="text-red-500 text-center text-xs py-2">
-                        Lỗi: ${error.message}
-                    </div>`;
-            } finally {
-                btn.disabled = false;
-                history.scrollTop = history.scrollHeight;
-            }
-        };
-
-        window.onload = function() {
-            document.getElementById('user-input').disabled = true;
-            document.getElementById('send-btn').disabled = true;
-        };
-    </script>
+        }
+    }
+    window.onload = function() {
+    document.getElementById('user-input').disabled = true;
+    document.getElementById('send-btn').disabled = true;
+};
+</script>
 </body>
 </html>
